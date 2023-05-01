@@ -81,6 +81,10 @@ if ($has_compiler) {
 			"meta-spec": {
 				"url": "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
 				"version": 2
+			},
+			"x_dynamic_prereqs": {
+				"version": 1,
+				"expressions": [ { "condition": [ "has_perl", "$]"] , "prereqs": { "runtime": { "requires": { "Bar": 1 } } } } ]
 			}
 		}
 		----
@@ -166,6 +170,13 @@ sub _slurp { do { local (@ARGV,$/)=$_[0]; <> } }
   ok( -f catfile(qw/blib lib auto share dist Foo-Bar file.txt/), 'dist sharedir file has been made');
   ok( -d catdir(qw/blib lib auto share module Foo-Bar/), 'moduole sharedir has been made');
   ok( -f catfile(qw/blib lib auto share module Foo-Bar file.txt/), 'module sharedir file has been made');
+
+  require CPAN::Meta;
+  my $meta = CPAN::Meta->load_file("MYMETA.json");
+  my $req = $meta->effective_prereqs->requirements_for('runtime', 'requires');
+  my $dynamic_dependency = join ',', sort $req->required_modules;
+
+  is($dynamic_dependency, 'Bar,perl', 'Dependency on Foo has been inserted');
 
   if ($has_compiler) {
     XSLoader::load('Foo::Bar');
