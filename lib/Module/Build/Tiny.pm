@@ -191,16 +191,17 @@ sub Build_PL {
 	make_executable('Build');
 	my @env = defined $ENV{PERL_MB_OPT} ? split_like_shell($ENV{PERL_MB_OPT}) : ();
 	write_file('_build_params', encode_json([ \@env, \@ARGV ]));
+	my %mymeta = %{ $meta->as_struct };
 	if (my $dynamic = $meta->custom('x_dynamic_prereqs')) {
-		my %meta = (%{ $meta->as_struct }, dynamic_config => 0);
 		my %opt = get_arguments(\@env, \@ARGV);
 		require CPAN::Requirements::Dynamic;
 		my $dynamic_parser = CPAN::Requirements::Dynamic->new(%opt);
 		my $prereq = $dynamic_parser->evaluate($dynamic);
-		$meta{prereqs} = $meta->effective_prereqs->with_merged_prereqs($prereq)->as_string_hash;
-		$meta = CPAN::Meta->new(\%meta);
+		$mymeta{prereqs} = $meta->effective_prereqs->with_merged_prereqs($prereq)->as_string_hash;
 	}
-	$meta->save(@$_) for ['MYMETA.json'], [ 'MYMETA.yml' => { version => 1.4 } ];
+	$mymeta{dynamic_config} = 0;
+	my $mymeta = CPAN::Meta->new(\%mymeta);
+	$mymeta->save(@$_) for ['MYMETA.json'], [ 'MYMETA.yml' => { version => 1.4 } ];
 }
 
 1;
