@@ -141,6 +141,7 @@ my %actions = (
 			lib => [ map { rel2abs(catdir(qw/blib/, $_)) } qw/arch lib/ ],
 		);
 		my $tester = TAP::Harness::Env->create(\%test_args);
+		local $ENV{PERL_DL_NONLAZY} = 1;
 		return $tester->runtests(sort +find(qr/\.t$/, 't'))->has_errors;
 	},
 	install => sub {
